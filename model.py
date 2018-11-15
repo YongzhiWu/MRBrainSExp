@@ -3,6 +3,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from torchsummary import summary
 
 def get_upsampling_weight(in_channels, out_channels, kernel_size):
     """ Make a 2D bilinear kernel suitable for upsampling"""
@@ -18,13 +19,14 @@ def get_upsampling_weight(in_channels, out_channels, kernel_size):
     return torch.from_numpy(weight).float()
 
 class MRBrainNet(nn.Module):
-    def __init__(self, n_class=9):
+    def __init__(self, n_classes=9):
         super(MRBrainNet, self).__init__()
+        self.n_classes = n_classes
         # conv1
         self.conv1_1 = nn.Conv2d(3, 64, 3, padding=100)
         self.relu1_1 = nn.ReLU(inplace=True)
         self.conv1_2 = nn.Conv2d(64, 64, 3, padding=1)
-        self.relu1_2 = nn.ReLu(inplace=True)
+        self.relu1_2 = nn.ReLU(inplace=True)
         self.pool1 = nn.MaxPool2d(2, stride=2, ceil_mode=True)
         
         # conv2
@@ -68,13 +70,13 @@ class MRBrainNet(nn.Module):
         self.upscore_conv2 = nn.ConvTranspose2d(16, 16, kernel_size=2, stride=2)
         
         self.conv3_16 = nn.Conv2d(256, 16, 3, padding=1)
-        self.upscore_conv3 = nn.ConvTranspose2d(16, 16, 2, 2)
+        self.upscore_conv3 = nn.ConvTranspose2d(16, 16, 4, 4)
         
         self.conv4_16 = nn.Conv2d(512, 16, 3, padding=1)
-        self.upscore_conv4 = nn.ConvTranspose2d(16, 16, 2, 2)
+        self.upscore_conv4 = nn.ConvTranspose2d(16, 16, 8, 8)
         
         self.conv5_16 = nn.Conv2d(512, 16, 3, padding=1)
-        self.upscore_conv5 = nn.ConvTranspose2d(16, 16, 2, 2)
+        self.upscore_conv5 = nn.ConvTranspose2d(16, 16, 16, 16)
         
         self.score = nn.Sequential(
                 nn.Conv2d(5*16, self.n_classes, 1),
@@ -123,6 +125,7 @@ class MRBrainNet(nn.Module):
         return score
         
     def _initialize_weights(self):
+        pass
         # Initialize weights
         
     def copy_params_from_vgg16(self, vgg16):
@@ -153,3 +156,11 @@ class MRBrainNet(nn.Module):
                 assert l1.bias.size() == l2.weight.bias.size()
                 l2.weight.data.copy_(l1.weight.data)
                 l2.bias.data.copy_(l1.bias.data)
+                
+if __name__ == "__main__":
+    x=torch.Tensor(4,3,256,256)
+    model=MRBrainNet(n_classes=9)
+    y=model(x)
+    print(y.shape)
+    #model = MRBrainNet(n_classes=9)
+    #summary(model.to(torch.device("cpu")), (3, 256, 256))
