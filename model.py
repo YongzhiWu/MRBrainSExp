@@ -23,7 +23,7 @@ class MRBrainNet(nn.Module):
         super(MRBrainNet, self).__init__()
         self.n_classes = n_classes
         # conv1
-        self.conv1_1 = nn.Conv2d(3, 64, 3, padding=100)
+        self.conv1_1 = nn.Conv2d(3, 64, 3, padding=1)
         self.relu1_1 = nn.ReLU(inplace=True)
         self.conv1_2 = nn.Conv2d(64, 64, 3, padding=1)
         self.relu1_2 = nn.ReLU(inplace=True)
@@ -158,9 +158,9 @@ class MRBrainNet(nn.Module):
                 l2.bias.data.copy_(l1.bias.data)
                 
 if __name__ == "__main__":
-    x=torch.Tensor(4,3,256,256)
-    model=MRBrainNet(n_classes=9)
-    y=model(x)
-    print(y.shape)
-    #model = MRBrainNet(n_classes=9)
-    #summary(model.to(torch.device("cpu")), (3, 256, 256))
+    #x=torch.Tensor(4,3,256,256)
+    #model=MRBrainNet(n_classes=9)
+    #y=model(x)
+    #print(y.shape)
+    model = MRBrainNet(n_classes=9)
+    summary(model.to(torch.device("cpu")), (3, 256, 256))
