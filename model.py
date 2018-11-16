@@ -158,10 +158,10 @@ class MRBrainNet(nn.Module):
                 l2.bias.data.copy_(l1.bias.data)
                 
 if __name__ == "__main__":
-    #x=torch.Tensor(4,3,256,256)
-    #model=MRBrainNet(n_classes=9)
-    #y=model(x)
-    #print(y.shape)
-    model = MRBrainNet(n_classes=9)
-    #summary(model.to(torch.device("cpu")), (3, 256, 256))
-    summary(model.cuda(), (3, 256, 256))
+    x=torch.Tensor(4,3,256,256)
+    model=MRBrainNet(n_classes=9)
+    y=model(x)
+    print(y.shape)
+    #model = MRBrainNet(n_classes=9)
+    #summary(model.to(torch.device("cpu")), (3, 240, 240))
+    #summary(model.cuda(), (3, 256, 256))

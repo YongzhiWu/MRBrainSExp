@@ -21,23 +21,28 @@ from model import MRBrainNet
 def cross_entropy2d(res, target, weight=None, size_average=True):
     # input: (n, c, h, w), target: (n, h, w)
     n, c, h, w = res.size()
+    nt, ht, wt = target.size()
+    
+    if h > ht and w > wt:
+        target = target.unsequeeze(1)
+        target = F.unsample(target, size=(h,w), mode='nearest')
+        target = target.sequeeze(1)
+    elif h < ht and w < wt:
+        res = F.upsample(res, size=(ht, wt), mode="bilinear")
+    elif h != ht and w != wt:
+        raise Exception("only support upsampling")
     # log_p: (n, c, h, w)
-    if LooseVersion(torch.__version__) < LooseVersion('0.3'):
-        # ==0.2.X
-        log_p = F.log_softmax(res)
-    else:
-        # >=0.3
-        log_p = F.log_softmax(res, dim=1)
+    log_p = F.log_softmax(res, dim=1)
     # log_p: (n*h*w, c)
-    log_p = log_p.transpose(1, 2).transpose(2, 3).contiguous()
-    log_p = log_p[target.view(n, h, w, 1).repeat(1, 1, 1, c) >= 0]
+    log_p = log_p.transpose(1, 2).transpose(2, 3).contiguous().view(-1, c)
+    log_p = log_p[target.contiguous().view(-1, 1).repeat(1, c) >= 0]
     log_p = log_p.view(-1, c)
     # target: (n*h*w,)
     mask = target >= 0
     target = target[mask]
-    loss = F.nll_loss(log_p, target, weight=weight, reduction='sum')
+    loss = F.nll_loss(log_p, target, weight=weight, ignore_index=250, size_average=False)
     if size_average:
-        loss /= mask.data.sum()
+        loss /= mask.float().data.sum()
     return loss
 
 # set hyper parameters
