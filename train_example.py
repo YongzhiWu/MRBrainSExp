@@ -8,9 +8,11 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
+import numpy as np
 
 from dataloader import MRBrainSDataset
 from dataloader.augmentations import *
+from utils.metrics import Score, averageMeter
 
 from torchvision import models
 from torchsummary import summary
@@ -45,16 +47,20 @@ def cross_entropy2d(res, target, weight=None, size_average=True):
         loss /= mask.float().data.sum()
     return loss
 
+def valid():
+    pass
+
 # set hyper parameters
 data_path = osp.join("/home/cv_wyz/data/", "MRBrainS")
-learning_rate = 1e-8
+learning_rate = 1e-3
 momentum = 0.99
 weight_decay = 0.005
 batch_size = 32
 num_workers = 4
 num_epochs = 500
 checkpoint_dir = "checkpoints"
-save_frequency = 10
+log_interval = 5
+save_frequency = 50
 use_cuda = True
 
 cuda = torch.cuda.is_available() and use_cuda
@@ -126,9 +132,42 @@ for i in range(num_epochs):
 
         loss.backward()
         optimizer.step()
-        print("[Epoch: %d/%d, Batch: %d/%d] [Losses: %.6f]" % (i, num_epochs, index, len(train_loader), total_loss/(image.size(0)*(index+1))))
         
-    if num_epochs % save_frequency == 0:
+        
+        if index % log_interval == 0:
+            print("[Train Epoch: %d/%d, Batch: %d/%d] [Losses: %.6f]" % (i, num_epochs, index, len(train_loader), total_loss/(image.size(0)*(index+1))))
+    
+    model.eval()
+    preds = []
+    gts = []
+    with torch.no_grad():
+        for img , mask in val_loader:
+            if cuda:
+                img = img.cuda()
+                mask = mask.cuda()
+            output = model(img)
+            output = F.interpolate(output, size=(256, 256), mode="bilinear", align_corners=True)
+            probs = F.softmax(output, dim=1)
+            _, pred = torch.max(probs, dim=1)
+            pred = pred.cpu().data[0].numpy()
+            
+            label = mask.cpu.data[0].numpy()
+            pred = np.asarray(pred, dtype=np.int)
+            label = np.asarray(label, dtype=np.int)
+            gts.append(label)
+            preds.append(preds)
+    
+    whole_brain_preds = np.dstack(preds)
+    whole_brain_gts = np.dstack(gts)
+    running_metrics = Score(9)
+    running_metrics.update(whole_brain_gts, whole_brain_preds)
+    scores, class_iou = running_metrics.get_scores()
+    mIoU = np.nanmean(class_iou[1::])
+    mean_dice = (mIoU * 2) / (mIoU + 1)
+    
+    print("[Valid] [mean IoU: %.6f, mean dice: %.6f]" % (mIoU, mean_dice))
+            
+    if i % save_frequency == 0:
         # save your model
         state_dict = model.state_dict()
-        torch.save(state_dict, checkpoint_dir + '/model_{}.pth'.format(num_epochs))
+        torch.save(state_dict, checkpoint_dir + '/model_{}.pth'.format(i))
