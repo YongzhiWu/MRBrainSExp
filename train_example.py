@@ -92,7 +92,7 @@ summary(model, (3, 256, 256))
 model.train()
 
 # define your criterion
-criterion = cross_entropy2d()
+criterion = cross_entropy2d
 criterion.cuda()
 
 # define your optimizer
