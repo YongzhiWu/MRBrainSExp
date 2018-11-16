@@ -150,10 +150,10 @@ class MRBrainNet(nn.Module):
                 self.conv5_3, self.relu5_3,
                 self.pool5
                 ]
-        for l1, l2 in zip(vgg16.features, features):
-            if(isinstance(l1, nn.Conv2d) and isinstance(l2, nn.Conv2d)):
+        for l1, l2 in zip(vgg16.features.children(), features):
+            if isinstance(l1, nn.Conv2d) and isinstance(l2, nn.Conv2d):
                 assert l1.weight.size() == l2.weight.size()
-                assert l1.bias.size() == l2.weight.bias.size()
+                assert l1.bias.size() == l2.bias.size()
                 l2.weight.data.copy_(l1.weight.data)
                 l2.bias.data.copy_(l1.bias.data)
                 
@@ -163,4 +163,5 @@ if __name__ == "__main__":
     #y=model(x)
     #print(y.shape)
     model = MRBrainNet(n_classes=9)
-    summary(model.to(torch.device("cpu")), (3, 256, 256))
+    #summary(model.to(torch.device("cpu")), (3, 256, 256))
+    summary(mode.cuda(), (3, 256, 256))

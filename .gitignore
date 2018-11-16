@@ -3,3 +3,5 @@ build
 *.zip
 MRBrainS
 dataloader/sample
+checkpoints
+pretrained_model

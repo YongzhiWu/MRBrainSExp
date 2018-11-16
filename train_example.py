@@ -91,7 +91,7 @@ for i in range(num_epochs):
 
         loss.backward()
         optimizer.step()
-        print("[Epoch: %d/%d, Batch: %d/%d] [Losses: %.6f" % (i, num_epochs, index, len(train_loader), total_loss/(image.size(0)*(index+1))))
+        print("[Epoch: %d/%d, Batch: %d/%d] [Losses: %.6f]" % (i, num_epochs, index, len(train_loader), total_loss/(image.size(0)*(index+1))))
         
     if num_epochs % save_frequency == 0:
         # save your model
