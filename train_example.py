@@ -114,7 +114,7 @@ for i in range(num_epochs):
     total_loss = 0
     for index, (img, mask) in enumerate(train_loader):
         image = Variable(img.type(Tensor))
-        mask = Variable(mask.type(Tensor))
+        #mask = Variable(mask.type(Tensor))
         optimizer.zero_grad()
         output = model(image)
         
