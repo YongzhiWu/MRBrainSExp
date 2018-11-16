@@ -79,7 +79,7 @@ class MRBrainNet(nn.Module):
         self.upscore_conv5 = nn.ConvTranspose2d(16, 16, 16, 16)
         
         self.score = nn.Sequential(
-                nn.Conv2d(5*16, self.n_classes, 1),
+                nn.Conv2d(4*16, self.n_classes, 1),
                 nn.Dropout(0.5)
                 )
         
@@ -120,7 +120,7 @@ class MRBrainNet(nn.Module):
         conv4_16 = self.upscore_conv4(self.conv4_16(conv4))
         conv5_16 = self.upscore_conv5(self.conv5_16(conv5))
         
-        final_layer = torch.cat([conv1_16, conv2_16, conv3_16, conv4_16, conv5_16], 1)
+        final_layer = torch.cat([conv1_16, conv2_16, conv3_16, conv4_16], 1)
         score = self.score(final_layer)
         return score
         
