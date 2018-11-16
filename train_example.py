@@ -93,7 +93,6 @@ model.train()
 
 # define your criterion
 criterion = cross_entropy2d
-criterion.cuda()
 
 # define your optimizer
 optimizer = torch.optim.SGD(
