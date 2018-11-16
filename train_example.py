@@ -151,7 +151,7 @@ for i in range(num_epochs):
             _, pred = torch.max(probs, dim=1)
             pred = pred.cpu().data[0].numpy()
             
-            label = mask.cpu.data[0].numpy()
+            label = mask.cpu().data[0].numpy()
             pred = np.asarray(pred, dtype=np.int)
             label = np.asarray(label, dtype=np.int)
             gts.append(label)
