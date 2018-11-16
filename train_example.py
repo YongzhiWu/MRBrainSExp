@@ -1,6 +1,9 @@
 import os
 import os.path as osp
 
+from distutils.version import LooseVersion
+import torch.nn.functional as F
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -14,6 +17,28 @@ from torchsummary import summary
 # import your model here
 #from yourmodel import YourSegModel
 from model import MRBrainNet
+
+def cross_entropy2d(res, target, weight=None, size_average=True):
+    # input: (n, c, h, w), target: (n, h, w)
+    n, c, h, w = res.size()
+    # log_p: (n, c, h, w)
+    if LooseVersion(torch.__version__) < LooseVersion('0.3'):
+        # ==0.2.X
+        log_p = F.log_softmax(res)
+    else:
+        # >=0.3
+        log_p = F.log_softmax(res, dim=1)
+    # log_p: (n*h*w, c)
+    log_p = log_p.transpose(1, 2).transpose(2, 3).contiguous()
+    log_p = log_p[target.view(n, h, w, 1).repeat(1, 1, 1, c) >= 0]
+    log_p = log_p.view(-1, c)
+    # target: (n*h*w,)
+    mask = target >= 0
+    target = target[mask]
+    loss = F.nll_loss(log_p, target, weight=weight, reduction='sum')
+    if size_average:
+        loss /= mask.data.sum()
+    return loss
 
 # set hyper parameters
 data_path = osp.join("/home/cv_wyz/data/", "MRBrainS")
@@ -67,7 +92,7 @@ summary(model, (3, 256, 256))
 model.train()
 
 # define your criterion
-criterion = nn.CrossEntropyLoss()
+criterion = cross_entropy2d()
 criterion.cuda()
 
 # define your optimizer
