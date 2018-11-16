@@ -132,7 +132,7 @@ class MRBrainNet(nn.Module):
         # Initialize network from pretrained vgg16
         features = [
                 self.conv1_1, self.relu1_1,
-                self.conv2_1, self.relu2_1,
+                self.conv1_2, self.relu1_2,
                 self.pool1,
                 self.conv2_1, self.relu2_1,
                 self.conv2_2, self.relu2_2,
@@ -150,7 +150,7 @@ class MRBrainNet(nn.Module):
                 self.conv5_3, self.relu5_3,
                 self.pool5
                 ]
-        for l1, l2 in zip(vgg16.features.children(), features):
+        for l1, l2 in zip(vgg16.features, features):
             if isinstance(l1, nn.Conv2d) and isinstance(l2, nn.Conv2d):
                 assert l1.weight.size() == l2.weight.size()
                 assert l1.bias.size() == l2.bias.size()
@@ -164,4 +164,4 @@ if __name__ == "__main__":
     #print(y.shape)
     model = MRBrainNet(n_classes=9)
     #summary(model.to(torch.device("cpu")), (3, 256, 256))
-    summary(mode.cuda(), (3, 256, 256))
+    summary(model.cuda(), (3, 256, 256))
